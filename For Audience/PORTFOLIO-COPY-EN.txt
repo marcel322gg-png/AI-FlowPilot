@@ -1,0 +1,9 @@
+FlowPilot — Local-first lead qualification
+
+An independent portfolio project for small businesses that need a clearer path from incoming inquiries to manager follow-up.
+
+FlowPilot validates and stores inquiries in PostgreSQL, detects repeat submissions by normalized email, and qualifies leads with a local Ollama model. When the model is offline, a deterministic Demo Mode keeps the intake workflow available. A React dashboard helps a manager review category, priority, score, inquiry summary, activity history, and an editable suggested reply.
+
+The project uses React, TypeScript, Node.js, PostgreSQL, n8n, Ollama, and Docker Compose. It is designed to run locally. Suggested replies remain drafts: FlowPilot does not send messages automatically.
+
+This is an independent portfolio project, not a client engagement or commercial deployment.

@@ -1,0 +1,7 @@
+{
+  "name":"FlowPilot · Record workflow failures","id":"a59d63c5-8db8-4091-835d-a564e3f16b71",
+  "nodes":[
+    {"parameters":{},"id":"aabf0478-2b16-4fa2-9897-00b498cded88","name":"Workflow error trigger","type":"n8n-nodes-base.errorTrigger","typeVersion":1,"position":[0,0]},
+    {"parameters":{"method":"POST","url":"http://api:3001/api/internal/workflow-errors","sendHeaders":true,"headerParameters":{"parameters":[{"name":"x-flowpilot-key","value":"={{ $env.N8N_API_KEY || '' }}"}]},"sendBody":true,"specifyBody":"json","jsonBody":"={{ {workflow:$json.workflow?.name || 'unknown', error:$json.execution?.error?.message || 'Workflow execution failed', leadId:$json.execution?.data?.resultData?.runData?.['Receive lead']?.[0]?.data?.main?.[0]?.[0]?.json?.body?.leadId || null} }}","options":{"timeout":5000}},"id":"cb955be8-bc78-4a33-8087-3e719852b3e4","name":"Record error in FlowPilot","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[250,0]}
+  ],"connections":{"Workflow error trigger":{"main":[[{"node":"Record error in FlowPilot","type":"main","index":0}]]}},"active":true,"settings":{"executionOrder":"v1"},"versionId":"c3f71a0b-1ac2-4be0-bd71-b17198a6aa22","meta":{"templateCredsSetupCompleted":true},"tags":[]
+}

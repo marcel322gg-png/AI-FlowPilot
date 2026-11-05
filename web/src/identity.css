@@ -1,0 +1,16 @@
+.avatar.monogram {
+  border: 2px solid #fff;
+  background: #4e59d5;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: -.3px;
+  box-shadow: 0 0 0 1px #dfe2f4;
+}
+.profile .avatar.monogram { width: 34px; height: 34px; flex: none; }
+.profile > span { min-width: 0; }
+.settings-profile { display: flex; align-items: center; gap: 14px; }
+.settings-profile .avatar { width: 46px; height: 46px; font-size: 13px; }
+.settings-profile h2 { margin: 0 0 5px; }
+.settings-profile p { margin: 0 0 5px; color: #586176; font-size: 13px; }
+.settings-profile small { color: #6e778b; font-size: 12px; }

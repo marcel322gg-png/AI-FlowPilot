@@ -1,0 +1,110 @@
+services:
+  postgres:
+    image: postgres:16.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-flowpilot}
+      POSTGRES_USER: ${POSTGRES_USER:-flowpilot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      N8N_DB_USER: ${N8N_DB_USER:-flowpilot_n8n}
+      N8N_DB_PASSWORD: ${N8N_DB_PASSWORD:?Set N8N_DB_PASSWORD in .env}
+    volumes: ["pgdata:/var/lib/postgresql/data", "./api/sql/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro", "./api/sql/init-n8n-role.sh:/docker-entrypoint-initdb.d/002-n8n-role.sh:ro"]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"], interval: 5s, timeout: 4s, retries: 20}
+  api:
+    build: {context: ., dockerfile: api/Dockerfile}
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgres://${POSTGRES_USER:-flowpilot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-flowpilot}
+      N8N_WEBHOOK_URL: http://n8n:5678/webhook/qualify-lead
+      N8N_HEALTH_URL: http://n8n:5678/healthz
+      N8N_API_KEY: ${N8N_API_KEY:-}
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-smollm2:1.7b}
+    ports: ["127.0.0.1:${API_PORT:-3001}:3001"]
+    depends_on: {postgres: {condition: service_healthy}}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  web:
+    build: {context: ., dockerfile: web/Dockerfile}
+    restart: unless-stopped
+    ports: ["127.0.0.1:${WEB_PORT:-5173}:80"]
+    depends_on: {api: {condition: service_healthy}}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 20s
+      timeout: 4s
+      retries: 5
+      start_period: 5s
+  n8n:
+    image: n8nio/n8n:1.76.1
+    restart: unless-stopped
+    environment:
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?Set N8N_ENCRYPTION_KEY in .env}
+      N8N_API_KEY: ${N8N_API_KEY:-}
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_SECURE_COOKIE: "false"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_SCHEMA: n8n
+      DB_POSTGRESDB_DATABASE: flowpilot_n8n
+      DB_POSTGRESDB_USER: ${N8N_DB_USER:-flowpilot_n8n}
+      DB_POSTGRESDB_PASSWORD: ${N8N_DB_PASSWORD:?Set N8N_DB_PASSWORD in .env}
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      N8N_TEMPLATES_ENABLED: "false"
+    ports: ["127.0.0.1:${N8N_PORT:-5678}:5678"]
+    volumes: ["n8ndata:/home/node/.n8n", "./n8n/workflows:/workflows:ro"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      n8n-db-migrate: {condition: service_completed_successfully}
+      n8n-permissions: {condition: service_completed_successfully}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5678/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 20s
+  n8n-db-migrate:
+    image: postgres:16.6-alpine
+    restart: "no"
+    entrypoint: ["sh", "/migrate-n8n-db.sh"]
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-flowpilot}
+      PGUSER: ${POSTGRES_USER:-flowpilot}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      N8N_DB_USER: ${N8N_DB_USER:-flowpilot_n8n}
+      N8N_DB_PASSWORD: ${N8N_DB_PASSWORD:?Set N8N_DB_PASSWORD in .env}
+      N8N_DB_NAME: flowpilot_n8n
+    volumes: ["./api/sql/init-n8n-role.sh:/migrate-n8n-db.sh:ro"]
+    depends_on: {postgres: {condition: service_healthy}}
+  n8n-permissions:
+    image: n8nio/n8n:1.76.1
+    user: "0:0"
+    restart: "no"
+    entrypoint: ["/bin/sh", "-c"]
+    command: "mkdir -p /home/node/.n8n && chown node:node /home/node/.n8n && if [ -f /home/node/.n8n/config ]; then chown node:node /home/node/.n8n/config && chmod 600 /home/node/.n8n/config; fi"
+    volumes: ["n8ndata:/home/node/.n8n"]
+  ollama:
+    image: ollama/ollama:0.5.7
+    restart: unless-stopped
+    volumes: ["ollamadata:/root/.ollama"]
+    ports: ["127.0.0.1:${OLLAMA_PORT:-11434}:11434"]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+volumes: {pgdata: {}, n8ndata: {}, ollamadata: {}}

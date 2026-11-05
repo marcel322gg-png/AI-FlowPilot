@@ -1,4 +1,4 @@
-export type FlowPilotPage = 'Dashboard' | 'Lead Inbox' | 'New inquiry' | 'Integrations';
+export type FlowPilotPage = 'Dashboard' | 'Lead Inbox' | 'New inquiry' | 'Integrations' | 'Settings' | 'System Status';
 
 export type FlowPilotRoute = {
   page: FlowPilotPage;
@@ -25,7 +25,9 @@ export function readFlowPilotRoute(href: string): FlowPilotRoute {
 
   if (path === '/leads' || path === '/inbox') page = 'Lead Inbox';
   else if (path === '/leads/new' || path === '/new-inquiry') page = 'New inquiry';
-  else if (path === '/settings' || path === '/integrations') page = 'Integrations';
+  else if (path === '/settings') page = 'Settings';
+  else if (path === '/integrations') page = 'Integrations';
+  else if (path === '/system-status') page = 'System Status';
   else {
     const match = path.match(/^\/leads\/([^/]+)$/);
     if (match) {
@@ -57,7 +59,7 @@ export function flowPilotHref(page: FlowPilotPage, filters: RouteFilters, leadId
     ? `/leads/${encodeURIComponent(leadId)}`
     : page === 'Lead Inbox' ? '/leads'
       : page === 'New inquiry' ? '/leads/new'
-        : page === 'Integrations' ? '/integrations' : '/';
+        : page === 'Integrations' ? '/integrations' : page === 'Settings' ? '/settings' : page === 'System Status' ? '/system-status' : '/';
   const params = new URLSearchParams();
   if (filters.q) params.set('q', filters.q);
   if (filters.status) params.set('status', filters.status);

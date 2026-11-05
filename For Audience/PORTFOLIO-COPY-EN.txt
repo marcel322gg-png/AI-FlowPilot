@@ -1,9 +1,19 @@
+PROJECT TITLE
 FlowPilot — Local-first lead qualification
 
-An independent portfolio project for small businesses that need a clearer path from incoming inquiries to manager follow-up.
+SHORT DESCRIPTION
+A local-first CRM that turns incoming inquiries into organized, AI-assisted follow-up for small teams.
 
-FlowPilot validates and stores inquiries in PostgreSQL, detects repeat submissions by normalized email, and qualifies leads with a local Ollama model. When the model is offline, a deterministic Demo Mode keeps the intake workflow available. A React dashboard helps a manager review category, priority, score, inquiry summary, activity history, and an editable suggested reply.
+PROJECT OVERVIEW
+FlowPilot captures inquiries in PostgreSQL, detects repeat submissions, and prepares a qualification summary using a local Ollama model. If Ollama is unavailable, deterministic Demo Mode keeps the workflow usable. Managers can review leads in a searchable, filterable inbox, inspect the original inquiry and activity history, update status, edit a suggested reply, and remove a lead with its related activity.
 
-The project uses React, TypeScript, Node.js, PostgreSQL, n8n, Ollama, and Docker Compose. It is designed to run locally. Suggested replies remain drafts: FlowPilot does not send messages automatically.
+The dashboard presents database-backed lead totals and status, category, priority, source, and score distributions, with 7-, 30-, and 90-day trend ranges. n8n provides qualification and workflow error-handling automation. Suggested replies remain drafts and are never sent automatically.
 
-This is an independent portfolio project, not a client engagement or commercial deployment.
+TECHNOLOGY
+React, TypeScript, Vite, Node.js, PostgreSQL, n8n, Ollama, Docker Compose.
+
+PROJECT STATUS
+Independent portfolio project with fictional demonstration data. Local automated tests, production builds, and service checks have passed. This is not a client engagement or commercial deployment, and no business outcomes are claimed.
+
+DEVELOPMENT APPROACH
+An AI-assisted, iterative build focused on connecting a usable CRM interface with persistent storage and local automation. Features were checked through automated tests and the running local application.

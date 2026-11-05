@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   color-scheme: light;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #20263a;
@@ -35,6 +35,9 @@
 .danger:disabled,.danger-icon:disabled { opacity:.55; cursor:wait; }
 .danger-icon { display:grid; place-items:center; width:34px; height:34px; border:1px solid #f0d9d7; border-radius:8px; background:#fff; color:#a63e3a; }
 .danger-icon:hover { border-color:#d88c87; background:#fff0ee; }
+.row-actions { display:flex; align-items:center; justify-content:flex-end; gap:11px; }
+.row-open { display:grid; place-items:center; width:36px; height:36px; border:1px solid transparent; border-radius:8px; background:transparent; color:#7a8498; }
+.row-open:hover { border-color:var(--line); background:#f8f9fc; color:var(--indigo); }
 .detail-actions { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:8px; margin-left:auto; }
 .editor-actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:18px; }
 .lead-editor .fields input,.lead-editor .fields select,.lead-editor .fields textarea { width:100%; min-height:43px; padding:10px 12px; border:1px solid var(--line-strong); border-radius:9px; background:#fff; color:var(--ink); font-size:14px; }
@@ -61,7 +64,7 @@ button:disabled { cursor: wait; }
 .navlabel { padding: 0 11px 9px; color: var(--muted); font-size: 10px; font-weight: 750; letter-spacing: 1.15px; }
 .nav { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 43px; padding: 0 12px; margin: 2px 0; border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--ink-soft); text-align: left; font-size: 13px; font-weight: 550; transition: background .16s ease, color .16s ease, border-color .16s ease, transform .16s ease; }
 .nav:hover { border-color: #edf0f7; background: #f8f9fc; color: var(--ink); }
-.nav.active { border-color: #e3e6ff; background: linear-gradient(100deg,#f0f1ff,#f7f7ff); color: var(--indigo); font-weight: 680; box-shadow: inset 3px 0 #5864dc; }
+.nav.active { border-color: var(--indigo-soft); background: var(--indigo-soft); color: var(--indigo); font-weight: 680; box-shadow: inset 3px 0 var(--indigo); }
 .nav em { display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; margin-left: auto; border-radius: 20px; background: #e5e8ff; color: #4854bd; font-size: 11px; font-style: normal; font-weight: 700; }
 .later { margin-top: 24px; }
 .sidebottom { margin-top: auto; }
@@ -91,7 +94,7 @@ button:disabled { cursor: wait; }
 .heading h1 { margin: 8px 0 7px; color: var(--ink); font-size: clamp(30px,3vw,36px); font-weight: 730; letter-spacing: -1.2px; line-height: 1.12; }
 .heading p { max-width: 720px; margin: 0; color: var(--muted); font-size: 15px; line-height: 1.55; }
 .primary, .secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border-radius: 10px; font-size: 13px; font-weight: 650; white-space: nowrap; transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease; }
-.primary { border: 1px solid var(--indigo); background: linear-gradient(135deg,#5d68e2,#4b57ce); color: #fff; box-shadow: 0 4px 10px rgba(78,89,213,.17); }
+.primary { border: 1px solid var(--indigo); background: var(--indigo); color: #fff; box-shadow: 0 4px 10px rgba(78,89,213,.17); }
 .primary:hover { transform: translateY(-1px); background: linear-gradient(135deg,#515dd5,#414dc1); box-shadow: 0 7px 16px rgba(78,89,213,.22); }
 .primary:active, .secondary:active { transform: translateY(0); }
 .primary:disabled { opacity: .68; }
@@ -196,6 +199,7 @@ td:first-child small { display: block; max-width: 260px; margin-top: 4px; overfl
 .rail { display: grid; align-content: start; gap: 0; }
 .rail h3 { margin: 0 0 16px; color: var(--ink); font-size: 16px; font-weight: 680; }
 .rail .secondary { width: 100%; margin-top: 10px; }
+.rail .danger { width:100%; margin-top:14px; }
 .timeline { display: grid; gap: 5px; padding: 13px 0; border-top: 1px solid #edf0f5; }
 .timeline b { color: var(--ink); font-size: 13px; font-weight: 680; text-transform: capitalize; }
 .timeline small, .timeline time { color: var(--muted); font-size: 12px; line-height: 1.4; }

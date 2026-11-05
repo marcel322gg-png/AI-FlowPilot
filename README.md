@@ -1,41 +1,136 @@
 # FlowPilot
 
-FlowPilot is an independent, local-first portfolio project that turns incoming inquiries into organized business opportunities. It demonstrates an end-to-end lead workflow: validation, normalized-email duplicate tracking, local classification, reviewable suggested replies, status management, and an activity history.
+**A local-first lead workspace for small teams.** Capture inquiries, identify duplicates, and turn unstructured messages into reviewable next steps with local AI.
 
-## Local architecture
+FlowPilot is an independent portfolio project that demonstrates a complete lead qualification workflow while keeping data and inference on your own machine. Managers stay in control: suggested replies are drafts, and FlowPilot never sends messages automatically.
 
-- **React, TypeScript, Vite** for the dashboard, lead inbox, manual review, integration status, and public demo form.
-- **Node.js, Express, TypeScript** for the API, input validation, manager actions, qualification fallback, and workflow callbacks.
-- **PostgreSQL 16** keeps application data in `flowpilot` and n8n's internal state in a dedicated `flowpilot_n8n` database owned by its separate login role.
-- **n8n 1.76.1** for the imported qualification and centralized error workflows.
-- **Ollama 0.5.7** with the adjustable `smollm2:1.7b` model for local inference. The system switches to deterministic Demo Mode when the model is absent or unavailable.
-- **Docker Compose** binds published service ports to localhost and persists database, n8n, and model data in named volumes.
+![FlowPilot dashboard](docs/screenshots/dashboard.jpg)
 
-No email or message sending integration exists. Suggested replies are drafts for a manager to review and send using their normal process. The bundled 24-lead CRM dataset is synthetic. It uses fictional contacts, reserved `.invalid` addresses, and fictional phone numbers; seeded leads are marked **Synthetic demo** in the interface and activity history.
+<p align="center"><em>Dashboard · lead volume, qualification breakdowns and activity trends</em></p>
 
-## Start on Windows
+[Product overview PDF](docs/assets/FlowPilot-product-overview.pdf) · [Architecture](docs/ARCHITECTURE.md) · [Product overview](docs/PRODUCT_OVERVIEW.md)
 
-1. Install and start Docker Desktop with its Linux engine available to your Windows account.
-2. Run `RUNLOCALLY.bat`. First start generates `.env` secrets, starts PostgreSQL, provisions `flowpilot_n8n`, copies any existing `n8n` schema tables into it transactionally, fixes the n8n settings-file permissions, then starts the app services, imports workflows with stable IDs, and pulls the model if absent.
-3. Open [http://localhost:5173](http://localhost:5173). On first visit to n8n at [http://localhost:5678](http://localhost:5678), create its local owner account.
-4. Stop with `STOPLOCALLY.bat`. Volumes and leads are preserved. `TESTLOCALLY.bat` runs unit tests, production builds, and Compose configuration validation.
+## What FlowPilot does
 
-After startup, run `docker compose exec -T api npm run seed` to add 24 synthetic leads across the existing workspace. The seeder is idempotent, preserves conflicting or unrelated records, applies the safe additive analytics migration, and removes only the confirmed placeholder lead when its UUID and all identifying fields match.
+- **Capture and persist inquiries** in PostgreSQL through a validated API and a public lead form.
+- **Detect likely duplicates** using normalized email addresses.
+- **Qualify locally** with Ollama, producing intent, summary, priority, score and a suggested reply.
+- **Keep work reviewable** with searchable and filterable leads, editable records, status changes and activity history.
+- **Give managers context** through dashboard summaries and 7, 30 or 90-day analytics.
+- **Show service health** for the API, database, n8n and Ollama integrations.
 
-## Development without Docker
+## Product tour
 
-Install dependencies with `npm install`, ensure a local PostgreSQL database matches `DATABASE_URL`, apply `api/sql/init.sql`, then use `npm run dev`; the API applies the idempotent analytics-column migration before listening. To seed locally, set `DATABASE_URL` and run `npm run seed`. When Ollama is unavailable, qualification uses deterministic local rules and is labeled **Demo Mode** in the interface. Without PostgreSQL, API persistence, dashboard data, and intake cannot function.
+| Dashboard and analytics | Lead inbox |
+|---|---|
+| ![Dashboard analytics](docs/screenshots/dashboard.jpg) | ![Searchable lead inbox](docs/screenshots/lead-inbox.jpg) |
+| Review volume, priority and trends. | Find and filter leads, then open a record. |
 
-## Workflow behavior
+| Lead details | Integrations and preferences |
+|---|---|
+| ![Lead detail and activity](docs/screenshots/lead-details.jpg) | ![Integration settings](docs/screenshots/integrations-settings.jpg) |
+| Inspect qualification, edit details and track activity. | Configure the workspace and inspect connected services. |
 
-The API commits a lead before dispatching a webhook, so long inference does not block the form. The qualification workflow loads lead data, calls Ollama, validates structured output or selects its deterministic fallback, then sends the result to the API for validation and persistence. API-level fallback also runs if n8n is unreachable. The error workflow records failed runs in `workflow_errors`. Import JSON files from `n8n/workflows/` if you prefer to load them manually.
+| AI review board | System status |
+|---|---|
+| ![AI board](docs/screenshots/ai-board.jpg) | ![System status](docs/screenshots/system-status.jpg) |
+| Review AI-assisted classifications and suggested replies. | Check API, database, n8n and Ollama health. |
 
-For an existing database, the `n8n-db-migrate` one-shot service runs independently of PostgreSQL initdb scripts. The safe manual sequence is to stop n8n, run `docker compose run --rm --no-deps n8n-db-migrate`, repair the n8n data-volume permissions, then restart only `api` and `n8n`. The old application-database `n8n` schema remains as an admin-owned archive after successful migration.
+## How it works
 
-## Portfolio materials
+**CAPTURE → QUALIFY → REVIEW → DECIDE**
 
-See [`For Audience/README.md`](For%20Audience/README.md), the English and Ukrainian project copy, and the demonstration video script. Screenshots are included only when captured from a running instance; they are not generated mockups.
+1. **Capture** — the API validates and stores an inquiry before starting qualification.
+2. **Qualify** — n8n can dispatch the job to Ollama; validated structured results are persisted. If the workflow or model is unavailable, deterministic local Demo Mode keeps the lead reviewable.
+3. **Review** — a manager checks the classification, summary and suggested reply, then edits the lead or changes its status.
+4. **Decide** — the manager chooses what happens next. Sending remains outside the app and under human control.
 
-## Current verification note
+## Architecture
 
-Build, test, compose, service-health, and browser results should be reported from the actual machine running this project. Docker Desktop was installed at the time of implementation, but the Linux engine pipe denied access to the current Windows account, preventing live-container and database verification in that session.
+~~~mermaid
+flowchart LR
+  Visitor[Inquiry form] --> API[Node.js + Express API]
+  UI[React + TypeScript workspace] --> API
+  API --> DB[(PostgreSQL)]
+  API -->|qualification job| N8N[n8n workflow]
+  N8N --> OLLAMA[Ollama local model]
+  N8N -->|validated result| API
+  API -->|fallback if unavailable| Rules[Deterministic Demo Mode]
+  API --> DB
+~~~
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for service boundaries, data flow and local deployment details.
+
+## Technology
+
+| Layer | Technologies |
+|---|---|
+| Web | React 18, TypeScript, Vite |
+| API | Node.js, Express, TypeScript, Zod |
+| Data | PostgreSQL 16 |
+| Qualification | Ollama local inference, deterministic fallback |
+| Workflow | n8n |
+| Local deployment | Docker Compose |
+
+## Local-first by design
+
+- PostgreSQL, n8n and Ollama data use local Docker volumes.
+- Compose publishes service ports on 127.0.0.1.
+- Ollama inference runs on the local machine; no hosted AI provider is configured.
+- Demo records are fictional and use reserved .invalid email addresses.
+- Suggested replies require human review. There is no automatic outbound messaging.
+
+## Demo Mode
+
+If Ollama is missing or unavailable, FlowPilot uses deterministic local rules to produce a predictable qualification result. The interface labels this as Demo Mode so it is not confused with model inference. API-level fallback also covers an unavailable n8n webhook. Demo Mode keeps the workflow demonstrable; it is not intended to represent model quality.
+
+## Run locally
+
+### Requirements
+
+- Windows with Docker Desktop and its Linux engine
+- Node.js and npm for optional development outside Docker
+
+### Docker quick start (Windows)
+
+1. Start Docker Desktop.
+2. Run RUNLOCALLY.bat from the repository root. On first launch it creates local .env secrets, initializes PostgreSQL and the n8n database, starts services, imports workflows and pulls the configured Ollama model.
+3. Open http://localhost:5173. Create a local n8n owner account at http://localhost:5678 if prompted.
+4. Optionally add the fictional sample dataset with docker compose exec -T api npm run seed.
+5. Stop the services with STOPLOCALLY.bat. Docker volumes preserve local data.
+
+The seeder adds 24 synthetic leads and is idempotent. It is optional.
+
+### Development
+
+Install dependencies with npm install, configure DATABASE_URL for a local PostgreSQL instance, apply api/sql/init.sql, then run:
+
+~~~sh
+npm run dev
+~~~
+
+Without PostgreSQL, persisted leads, dashboard data and intake are unavailable. If Ollama is unavailable, qualification falls back to Demo Mode.
+
+## Configuration
+
+The checked-in [.env.example](.env.example) documents the supported local settings. RUNLOCALLY.bat generates a local .env on first run; keep that file private. Common settings include PostgreSQL credentials, local service ports, the Ollama model, n8n credentials and the n8n webhook/API key. Compose requires the database passwords and n8n encryption key. See [docker-compose.yml](docker-compose.yml) for service wiring and defaults.
+
+## Tests and build
+
+Use the repository scripts:
+
+~~~sh
+npm test
+npm run build
+docker compose config
+~~~
+
+On Windows, TESTLOCALLY.bat runs the unit tests, production builds and Compose configuration check together. Docker-based service health checks require Docker Desktop's Linux engine to be available.
+
+## Project status
+
+FlowPilot is an independent portfolio demonstration, not a commercial deployment. The repository includes unit tests and local service health checks, but it makes no claims about production customers, deployments or business outcomes. Review [Product overview](docs/PRODUCT_OVERVIEW.md) and the [presentation PDF](docs/assets/FlowPilot-product-overview.pdf).
+
+## License
+
+No license is currently declared. Contact the repository owner before reusing this project.

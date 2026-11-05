@@ -2,7 +2,7 @@ import {Pool,PoolClient} from 'pg';
 import {DEMO_LEADS} from './demo-data';
 import {ensureAnalyticsSchema} from './schema';
 
-const placeholder={id:'bac86fe5-0399-46fd-bb88-3def9ecd3634',name:'23244',company:'Company',subject:'Sub',message:'13432424242'};
+const placeholder={id:'bac86fe5-0399-46fd-bbb8-3def9ecd3634',name:'23244',company:'Company',subject:'Sub',message:'13432424242'};
 
 export async function seedDemoData(pool:Pool) {
   const client:PoolClient=await pool.connect();

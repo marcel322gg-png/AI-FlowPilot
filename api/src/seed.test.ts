@@ -42,7 +42,7 @@ describe('synthetic demo seeder',()=>{
     expect(stored.size).toBe(24);
     expect(eventRows).toHaveLength(eventCount);
     expect(client.query.mock.calls.filter(([sql])=>String(sql).includes('INSERT INTO leads')).every(([sql])=>String(sql).includes('ON CONFLICT(normalized_email) DO NOTHING'))).toBe(true);
-    expect(deletes[0]).toEqual(['bac86fe5-0399-46fd-bb88-3def9ecd3634','23244','Company','Sub','13432424242']);
+    expect(deletes[0]).toEqual(['bac86fe5-0399-46fd-bbb8-3def9ecd3634','23244','Company','Sub','13432424242']);
     expect(client.release).toHaveBeenCalledTimes(2);
   });
 });

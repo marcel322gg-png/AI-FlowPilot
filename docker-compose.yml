@@ -24,7 +24,7 @@ services:
     ports: ["127.0.0.1:${API_PORT:-3001}:3001"]
     depends_on: {postgres: {condition: service_healthy}}
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/health').then(async r=>{const d=await r.json();process.exit(r.ok&&d.database==='connected'?0:1)}).catch(()=>process.exit(1))"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -66,8 +66,6 @@ services:
     volumes: ["n8ndata:/home/node/.n8n", "./n8n/workflows:/workflows:ro"]
     depends_on:
       postgres: {condition: service_healthy}
-      n8n-db-migrate: {condition: service_completed_successfully}
-      n8n-permissions: {condition: service_completed_successfully}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:5678/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 15s
@@ -94,7 +92,21 @@ services:
     user: "0:0"
     restart: "no"
     entrypoint: ["/bin/sh", "-c"]
-    command: "mkdir -p /home/node/.n8n && chown node:node /home/node/.n8n && if [ -f /home/node/.n8n/config ]; then chown node:node /home/node/.n8n/config && chmod 600 /home/node/.n8n/config; fi"
+    command:
+      - |-
+        set -eu
+        mkdir -p /home/node/.n8n
+        if [ -d /home/node/.n8n/config ]; then
+          echo "n8n settings path is a directory; refusing to overwrite it." >&2
+          exit 1
+        fi
+        if [ ! -f /home/node/.n8n/config ]; then
+          umask 077
+          printf '{}\n' > /home/node/.n8n/config
+        fi
+        chown node:node /home/node/.n8n /home/node/.n8n/config
+        chmod 600 /home/node/.n8n/config
+        test -f /home/node/.n8n/config
     volumes: ["n8ndata:/home/node/.n8n"]
   ollama:
     image: ollama/ollama:0.5.7
